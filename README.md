@@ -235,6 +235,34 @@ Resolving deltas: 100% (9/9), done.
 - 192.168.50.231 - это будет клиент
 
 
+мой inventory.ini + плюс немного пришлось поменять playbook(заменить в одном месте пользователя vagrant на sadmin
+```
+[all]
+ns01 ansible_host=192.168.50.232 ansible_user=sadmin ansible_password=123wer ansible_become_password=123wer
+client ansible_host=192.168.50.231 ansible_user=sadmin ansible_password=123wer ansible_become_password=123wer
+
+[ns01]
+ns01 ansible_host=192.168.50.232 ansible_user=sadmin ansible_password=123wer ansible_become_password=123wer
+
+[client]
+client ansible_host=192.168.50.231 ansible_user=sadmin ansible_password=123wer ansible_become_password=123wer
+
+```
+
+Дело кончилось так
+```
+bash: 192.168.50.232: команда не найдена...
+bash: ddns.lab: команда не найдена...
+bash: add: команда не найдена...
+[root@localhost ~]# nsupdate -k /etc/named.zonetransfer.key
+> server 192.168.50.232
+> zone ddns.lab
+> update add www.ddns.lab. 60 A 192.168.50.15
+> send
+; Communication with 192.168.50.232#53 failed: timed out
+
+```
+
 
 
 

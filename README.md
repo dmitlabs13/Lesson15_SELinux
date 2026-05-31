@@ -192,6 +192,48 @@ libsemanage.semanage_direct_remove_key: Removing last nginx module (no other ngi
 ```
 
 
+## Задание 2 Обеспечить работоспособность приложения при включенном selinux.
+
+- развернуть приложенный стенд https://github.com/mbfx/otus-linux-adm/tree/master/selinux_dns_problems;
+- выяснить причину неработоспособности механизма обновления зоны (см. README);
+- предложить решение (или решения) для данной проблемы;
+- выбрать одно из решений для реализации, предварительно обосновав выбор;
+- реализовать выбранное решение и продемонстрировать его работоспособность.
+
+
+Ставим ansible и клонируем репозиторий
+```
+root@lp-ubn1:/home/sadmin# pipx install --include-deps ansible
+  installed package ansible 13.7.0, installed using Python 3.12.3
+  These apps are now globally available
+    - ansible
+    - ansible-community
+    - ansible-config
+    - ansible-console
+    - ansible-doc
+    - ansible-galaxy
+    - ansible-inventory
+    - ansible-playbook
+    - ansible-pull
+    - ansible-test
+    - ansible-vault
+⚠️  Note: '/root/.local/bin' is not on your PATH environment variable. These apps will not be globally accessible until your PATH is updated. Run `pipx
+    ensurepath` to automatically add it, or manually modify your PATH in your shell's config file (i.e. ~/.bashrc).
+done! ✨ 🌟 ✨
+root@lp-ubn1:/home/sadmin# git clone https://github.com/Nickmob/vagrant_selinux_dns_problems.git
+Cloning into 'vagrant_selinux_dns_problems'...
+remote: Enumerating objects: 32, done.
+remote: Counting objects: 100% (32/32), done.
+remote: Compressing objects: 100% (21/21), done.
+remote: Total 32 (delta 9), reused 29 (delta 9), pack-reused 0 (from 0)
+Receiving objects: 100% (32/32), 7.23 KiB | 740.00 KiB/s, done.
+Resolving deltas: 100% (9/9), done.
+```
+
+В моейм слечае есть два сервера:
+- 192.168.50.232 - здесь ansible и он же будет сервером dns
+- 192.168.50.231 - это будет клиент
+
 
 
 

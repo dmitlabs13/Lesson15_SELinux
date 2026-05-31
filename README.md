@@ -158,6 +158,41 @@ LISTEN 0      511             [::]:4093         [::]:*    users:(("nginx",pid=23
 [root@localhost sadmin]#
 ```
 
+отключим обратно 
+```
+setsebool -P nis_enabled off
+[root@localhost sadmin]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+```
+Разрешим в SELinux работу nginx на порту TCP 4881 c помощью формирования и установки модуля SELinux
+```
+root@localhost nginx]# grep nginx /var/log/audit/audit.log | audit2allow -M nginx
+******************** ВАЖНО ***********************
+Чтобы сделать этот пакет политики активным, выполните:
+
+semodule -i nginx.pp
+
+# применяем модуль semodule -i nginx.pp
+semodule -i nginx.pp
+
+# перезапускаем nginx и проверяем
+[root@localhost sadmin]# systemctl restart nginx
+[root@localhost sadmin]# ss -tlnp | grep nginx
+LISTEN 0      511          0.0.0.0:4093      0.0.0.0:*    users:(("nginx",pid=232429,fd=6),("nginx",pid=232428,fd=6))
+LISTEN 0      511             [::]:4093         [::]:*    users:(("nginx",pid=232429,fd=7),("nginx",pid=232428,fd=7))
+[root@localhost sadmin]#
+
+```
+
+отлключаем vjlekm
+```
+semodule -r nginx
+libsemanage.semanage_direct_remove_key: Removing last nginx module (no other nginx module exists at another priority).
+```
+
+
+
 
 
 

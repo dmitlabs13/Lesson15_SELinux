@@ -247,7 +247,13 @@ ns01 ansible_host=192.168.50.232 ansible_user=sadmin ansible_password=123wer ans
 [client]
 client ansible_host=192.168.50.231 ansible_user=sadmin ansible_password=123wer ansible_become_password=123wer
 
+
+
 ```
+
+так же пришлось поменять /etc/named.conf на свои ip адреса
+
+
 
 Дело кончилось так
 ```

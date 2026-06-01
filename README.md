@@ -255,18 +255,14 @@ client ansible_host=192.168.50.231 ansible_user=sadmin ansible_password=123wer a
 
 
 
-Дело кончилось так
+Пробуем внести изменения в зону, получаем ошибку
 ```
-bash: 192.168.50.232: команда не найдена...
-bash: ddns.lab: команда не найдена...
-bash: add: команда не найдена...
 [root@localhost ~]# nsupdate -k /etc/named.zonetransfer.key
 > server 192.168.50.232
 > zone ddns.lab
-> update add www.ddns.lab. 60 A 192.168.50.15
+> update add www.ddns.lab. 60 A 192.168.50.231
 > send
-; Communication with 192.168.50.232#53 failed: timed out
-
+update failed: SERVFAIL
 ```
 
 

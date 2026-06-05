@@ -265,6 +265,135 @@ client ansible_host=192.168.50.231 ansible_user=sadmin ansible_password=123wer a
 update failed: SERVFAIL
 ```
 
+на сервере видим nfrjt
+```
+type=AVC msg=audit(1780333022.936:5993): avc:  denied  { write } for  pid=247502 comm="isc-net-0000" name="dynamic" dev="dm-0" ino=103129092 scontext=system_u:system_r:named_t:s0 tcontext=unconfined_u:object_r:named_conf_t:s0 tclass=dir permissive=0
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+
+type=AVC msg=audit(1780662628.365:6325): avc:  denied  { write } for  pid=247502 comm="isc-net-0000" name="dynamic" dev="dm-0" ino=103129092 scontext=system_u:system_r:named_t:s0 tcontext=unconfined_u:object_r:named_conf_t:s0 tclass=dir permissive=0
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+
+```
+
+видим что как раз используется named_conf_t
+
+```
+[root@localhost ~]# ls -laZ /etc/named
+итого 28
+drw-rwx---.   3 root named system_u:object_r:named_conf_t:s0      121 мая 31 21:48 .
+drwxr-xr-x. 136 root root  system_u:object_r:etc_t:s0            8192 мая 31 21:49 ..
+drw-rwx---.   2 root named unconfined_u:object_r:named_conf_t:s0   56 мая 31 21:48 dynamic
+-rw-rw----.   1 root named system_u:object_r:named_conf_t:s0      784 мая 31 21:48 named.50.168.192.rev
+-rw-rw----.   1 root named system_u:object_r:named_conf_t:s0      610 мая 31 21:48 named.dns.lab
+-rw-rw----.   1 root named system_u:object_r:named_conf_t:s0      609 мая 31 21:48 named.dns.lab.view1
+-rw-rw----.   1 root named system_u:object_r:named_conf_t:s0      657 мая 31 21:48 named.newdns.lab
+
+```
+
+Изменим тип контекста безопасности для каталога /etc/named: sudo chcon -R -t named_zone_t /etc/named
+```
+[root@localhost ~]# sudo chcon -R -t named_zone_t /etc/named
+[root@localhost ~]#
+[root@localhost ~]#
+[root@localhost ~]#
+[root@localhost ~]# ls -laZ /etc/named
+итого 28
+drw-rwx---.   3 root named system_u:object_r:named_zone_t:s0      121 мая 31 21:48 .
+drwxr-xr-x. 136 root root  system_u:object_r:etc_t:s0            8192 мая 31 21:49 ..
+drw-rwx---.   2 root named unconfined_u:object_r:named_zone_t:s0   56 мая 31 21:48 dynamic
+-rw-rw----.   1 root named system_u:object_r:named_zone_t:s0      784 мая 31 21:48 named.50.168.192.rev
+-rw-rw----.   1 root named system_u:object_r:named_zone_t:s0      610 мая 31 21:48 named.dns.lab
+-rw-rw----.   1 root named system_u:object_r:named_zone_t:s0      609 мая 31 21:48 named.dns.lab.view1
+-rw-rw----.   1 root named system_u:object_r:named_zone_t:s0      657 мая 31 21:48 named.newdns.lab
+
+```
+
+еще раз пробуем обновить зону
+```
+[sadmin@localhost ~]$ nsupdate -k /etc/named.zonetransfer.key
+> server 192.168.50.232
+> zone ddns.lab
+> update add www.ddns.lab. 60 A 192.168.50.231
+> send
+> quit
+```
+проверяем обновилась ли зона
+```
+[sadmin@localhost ~]$ dig @192.168.50.232 www.ddns.lab
+
+; <<>> DiG 9.16.23-RH <<>> @192.168.50.232 www.ddns.lab
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 24503
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 44d5df7245abc474010000006a22c60395968ba7059bf839 (good)
+;; QUESTION SECTION:
+;www.ddns.lab.                  IN      A
+
+;; ANSWER SECTION:
+www.ddns.lab.           60      IN      A       192.168.50.231
+
+;; Query time: 0 msec
+;; SERVER: 192.168.50.232#53(192.168.50.232)
+;; WHEN: Fri Jun 05 15:50:11 MSK 2026
+;; MSG SIZE  rcvd: 85
+```
+
+перезагружаем сервера , изменения сохранились
+```
+Last login: Fri Jun  5 16:02:16 2026 from 192.168.20.25
+[sadmin@localhost ~]$ dig @192.168.50.232 www.ddns.lab
+
+; <<>> DiG 9.16.23-RH <<>> @192.168.50.232 www.ddns.lab
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2113
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 7541e64af2ed55f8010000006a22c97f13343b855f058f5b (good)
+;; QUESTION SECTION:
+;www.ddns.lab.                  IN      A
+
+;; ANSWER SECTION:
+www.ddns.lab.           60      IN      A       192.168.50.231
+
+;; Query time: 0 msec
+;; SERVER: 192.168.50.232#53(192.168.50.232)
+;; WHEN: Fri Jun 05 16:05:03 MSK 2026
+;; MSG SIZE  rcvd: 85
+
+```
+выполнили перемаркировку , все отлитело на первоначальный контекст
+```
+[root@localhost sadmin]# restorecon -v -R /etc/named
+Relabeled /etc/named from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/named.dns.lab from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/named.dns.lab.view1 from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/dynamic from unconfined_u:object_r:named_zone_t:s0 to unconfined_u:object_r:named_conf_t:s0
+Relabeled /etc/named/dynamic/named.ddns.lab from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/dynamic/named.ddns.lab.view1 from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/dynamic/named.ddns.lab.jnl from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/named.newdns.lab from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+Relabeled /etc/named/named.50.168.192.rev from system_u:object_r:named_zone_t:s0 to system_u:object_r:named_conf_t:s0
+```
+
+
+
 
 
 
